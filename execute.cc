@@ -9,7 +9,6 @@
 #include <cctype>
 #include <cstring>
 #include <string>
-#include <map>
 #include "execute.h"
 #include "lexer.h"
 
@@ -24,24 +23,6 @@ int next_available = 0;
 
 std::vector<int> inputs;
 int next_input = 0;
-LexicalAnalyzer lexer2;
-map<string, int> location_of; // returns address of variable
-
-void debug(const char* format, ...)
-{
-    va_list args;
-    if (DEBUG)
-    {
-        va_start (args, format);
-        vfprintf (stdout, format, args);
-        va_end (args);
-    }
-}
-
-void error() {
-    debug("EXITED EARLY!!!");
-    exit(-1);
-}
 
 void execute_program(struct InstructionNode * program)
 {
@@ -144,33 +125,9 @@ void execute_program(struct InstructionNode * program)
     }
 }
 
-// void parse_var_section() {
-//     while (lexer.peek(1).token_type == ID) {
-
-//         debug("Inserting locationof(%s) == %d", lexer.peek(1), next_available);
-//         // int address_for_i = next_available;
-//         location_of.insert({lexer.GetToken().lexeme, next_available});
-//         mem[next_available] = 0;
-//         next_available++;
-
-
-//         if (lexer.GetToken().token_type != COMMA) {
-//             debug("Error:  Comma Expected!.\n");
-//             error();
-//         }
-//     }
-// }
-
-// struct InstructionNode* parse_Generate_Intermediate_Representation() {
-//     // var_section
-//     parse_var_section();
-//     return NULL;
-// }
-
 
 int main()
 {
-    debug("hello?");
     struct InstructionNode * program;
     program = parse_Generate_Intermediate_Representation();
     execute_program(program);

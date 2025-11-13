@@ -22,6 +22,9 @@ typedef enum { END_OF_FILE = 0,
     NUM, ID, ERROR
 } TokenType;
 
+
+
+
 class Token {
   public:
     void Print();

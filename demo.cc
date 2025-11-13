@@ -4,9 +4,20 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <string.h>
+#include <vector>
+#include <map>
+#include <iostream>
 #include "execute.h"
 #include "lexer.h"
-#include "execute.h"
+
+const char * token_string[] =  { "END_OF_FILE", \
+    "VAR", "FOR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "INPUT", "OUTPUT", "ARRAY",
+    "PLUS", "MINUS", "DIV", "MULT",
+    "EQUAL", "COLON", "COMMA", "SEMICOLON",
+    "LBRAC", "RBRAC", "LPAREN", "RPAREN", "LBRACE", "RBRACE",
+    "NOTEQUAL", "GREATER", "LESS",
+    "NUM", "ID", "ERROR"
+};
 
 
 // NOTE: even though this file does not peek() at or get() any
@@ -16,8 +27,261 @@
 // to execute just run ./a.out < test, where test is any
 // test case
 LexicalAnalyzer lexer;   
+const bool DEBUG = true;
 
-struct InstructionNode *parse_Generate_Intermediate_Representation()
+
+using namespace std;
+map<string, int> location_of; // returns address of variable
+map<int, int> const_location; // returns address of const
+
+void append_const(const int newConst) {
+    // add const into memory AND inserts it into const_location
+    
+
+    // do nothing if already in list
+    if(const_location.find(newConst) != const_location.end()) {
+        debug("const %d already in consts!");
+        return;
+    }
+
+
+    const_location.insert({newConst, next_available});
+    mem[next_available] = newConst;
+    next_available++;
+
+}
+
+struct InstructionNode *start = new InstructionNode;
+struct InstructionNode *recent_instr = start;
+
+void append_instruction(InstructionNode* newInstr) {
+    recent_instr->next = newInstr;
+    recent_instr = newInstr;
+}
+
+void debug(const char* format, ...)
+{
+    va_list args;
+    if (DEBUG)
+    {
+        va_start (args, format);
+        vfprintf (stdout, format, args);
+        cout << endl;
+        va_end (args);
+    }
+}
+
+void error() {
+    cout << ("SYNTAX ERROR!");
+    exit(-1);
+}
+
+void assertTokenType(Token t, TokenType type, const char* msg) {
+    if (t.token_type != type) {
+        debug(msg);
+        debug("Got %s, expected %s", 
+           token_string[t.token_type],
+           token_string[type]);
+        error();
+    }
+}
+
+void assertTokenType(Token t, vector<TokenType> types, const char* msg) {
+    for (TokenType type : types) {
+        // if any type is equal
+        if (t.token_type == type) 
+            return;
+    }
+    debug(msg);
+    error();
+}
+
+
+
+void parse_var_section() {
+    while (lexer.peek(1).token_type == ID) {
+
+        debug("Inserting locationof(%s) == %d", lexer.peek(1).lexeme.c_str(), next_available);
+        // int address_for_i = next_available;
+
+        const Token t = lexer.GetToken();
+        location_of.insert({t.lexeme, next_available});
+        mem[next_available] = 0;
+        next_available++;
+
+
+        const Token follow = lexer.GetToken();
+        if (follow.token_type == SEMICOLON) {
+            debug("Comma no longer present!");
+            break;
+        }
+
+        // neither a semicolon or whatever
+        assertTokenType(follow, COMMA, "Expected Comma or semicolon!");
+    }
+}
+
+void parse_statement(void);
+void parse_assign(void);
+void parse_while(void);
+void parse_if(void);
+void parse_switch(void);
+void parse_for(void);
+void parse_output(void);
+void parse_input(void);
+
+void parse_body() {
+    assertTokenType(lexer.GetToken(), LBRACE, "Body expected starting LBRACE!");
+
+    // stmt_list
+    while (true) {
+        // check if it is a statement
+        assertTokenType(lexer.peek(1), RBRACE, "Error in body->RBRACE");
+
+        parse_statement();
+    }
+
+}
+
+void parse_statement() {
+    /*
+    assign stmt | 
+        FIRST ID
+    while stmt | 
+        FIRST WHILE
+    if stmt | 
+        FIRST IF
+    switch stmt | 
+        FIRST SWITCH
+    for stmt
+        FIRST FOR
+    output stmt |
+        FIRST OUTPTUT
+    input stmt
+        FIRST INPUT
+    */
+   switch (lexer.peek(1).token_type) {
+    case ID:
+        parse_assign();
+        break;
+    case WHILE:
+        // parse_while();
+        break;
+    case IF:
+        // parse_if();
+        break;
+    case SWITCH:
+        // parse_switch();
+        break;
+    case FOR:
+        // parse_for();
+        break;
+    case OUTPUT:
+        parse_output();
+        break;
+    case INPUT:
+        parse_input();
+        break;
+    default:
+        debug("SWITCH STATEMENT DEFAULT!!");
+        error();
+   }
+}
+
+void parse_input(void) {
+    // input ID semicolon
+    struct InstructionNode *newInstr = new InstructionNode;
+    assertTokenType(lexer.GetToken(), INPUT, "err");
+
+    Token t = lexer.GetToken();
+    assertTokenType(t, ID, "Expected ID in parse_input");
+
+    assertTokenType(lexer.GetToken(), SEMICOLON, "Expected ; in parse_input");
+
+    newInstr->type = IN;
+    newInstr->input_inst.var_loc = location_of[t.lexeme];
+    append_instruction(newInstr);
+}
+
+void parse_output(void) {
+    // input ID semicolon
+    struct InstructionNode *newInstr = new InstructionNode;
+    assertTokenType(lexer.GetToken(), OUTPUT, "err");
+
+    Token t = lexer.GetToken();
+    assertTokenType(t, ID, "Expected ID in parse_output");
+
+    assertTokenType(lexer.GetToken(), SEMICOLON, "Expected ; in parse_output");
+
+    newInstr->type = OUT;
+    newInstr->input_inst.var_loc = location_of[t.lexeme];
+    append_instruction(newInstr);
+}
+
+void parse_assign() {
+    struct InstructionNode *newInstr = new InstructionNode;
+    newInstr->type = ASSIGN;
+    
+
+    Token left = lexer.GetToken();
+    assertTokenType(left, ID, "Error with STATEMENT->ASSIGN->ID");
+    newInstr->assign_inst.lhs_loc = location_of[left.lexeme];
+
+    assertTokenType(lexer.GetToken(), EQUAL, "Error with STATEMENT->ASSIGN->EQUAL");
+
+    // now, either primary or expression
+    Token p1 = lexer.GetToken();
+    assertTokenType(p1, {ID, NUM}, "Error with STATEMENT->ASSIGN->PRIMARY");
+
+    if (lexer.peek(1).token_type == SEMICOLON) {
+        lexer.GetToken(); // everything consumed
+        newInstr->assign_inst.op = OPERATOR_NONE;
+        // left = p1
+
+        if (p1.token_type == NUM) {
+            // left = p1 (num)
+            const int rhs = stoi(p1.lexeme);
+            append_const(rhs);
+            newInstr->assign_inst.op1_loc = const_location[rhs];
+        } else { // token type == ID
+            const string rhs = p1.lexeme;
+            newInstr->assign_inst.op1_loc = location_of[rhs];
+        }
+        append_instruction(newInstr);
+        return;
+    }
+    else {
+        debug("unsupported op");
+        error(); // unsupported op
+        return;
+    }
+}
+
+void parse_inputs_section(void) {
+    // NUM LIST (NUM NUM ... NUM EOF)
+    while (true) {
+        Token t = lexer.GetToken();
+        if (t.token_type == END_OF_FILE) {
+            return;
+        }
+        assertTokenType(t, NUM, "EXPECTED NUMBERS IN INPUTS");
+        inputs.push_back(stoi(t.lexeme));
+    }
+}
+
+
+struct InstructionNode* parse_Generate_Intermediate_Representation() {
+    debug("===========Entering Var Section:");
+    parse_var_section();
+    debug("===========Entering Body Section:");
+    parse_body();
+    debug("===========Entering Inputs Section:");
+    parse_inputs_section();
+    return NULL;
+}
+
+
+struct InstructionNode *pre_parse_Generate_Intermediate_Representation()
 {
      // Sample program for demonstration purpose only
      // Replace the following with a call to a parser that reads the
