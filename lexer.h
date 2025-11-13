@@ -8,8 +8,10 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 #include "inputbuf.h"
+#include "execute.h"
 
 // ------- token types -------------------
 
@@ -21,6 +23,26 @@ typedef enum { END_OF_FILE = 0,
     NOTEQUAL, GREATER, LESS,
     NUM, ID, ERROR
 } TokenType;
+
+const std::map<TokenType, ArithmeticOperatorType> arithOperatorType = {
+  {PLUS, OPERATOR_PLUS},
+  {MINUS, OPERATOR_MINUS},
+  {MULT, OPERATOR_MULT},
+  {DIV, OPERATOR_DIV},
+};
+
+
+const std::map<TokenType, ConditionalOperatorType> condOperatorType = {
+  {GREATER, CONDITION_GREATER},
+  {LESS, CONDITION_LESS},
+  {NOTEQUAL, CONDITION_NOTEQUAL},
+};
+
+
+
+
+
+
 
 
 

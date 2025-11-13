@@ -53,11 +53,15 @@ void append_const(const int newConst) {
 
 struct InstructionNode *start = new InstructionNode;
 struct InstructionNode *recent_instr = start;
+int instr_num = 1;
 
 void append_instruction(InstructionNode* newInstr) {
     recent_instr->next = newInstr;
     recent_instr = newInstr;
+    recent_instr->next = NULL;
+    instr_num++;
 }
+
 
 void debug(const char* format, ...)
 {
@@ -163,6 +167,8 @@ void parse_statement() {
     input stmt
         FIRST INPUT
     */
+   if (DEBUG)
+    printf("[%d] ", instr_num);
    switch (lexer.peek(1).token_type) {
     case ID:
         debug("Adding ASSIGN Instruction");
@@ -243,26 +249,44 @@ void parse_assign() {
     Token p1 = lexer.GetToken();
     assertTokenType(p1, {ID, NUM}, "Error with STATEMENT->ASSIGN->PRIMARY");
 
+    if (p1.token_type == NUM) {
+        // left = p1 (num)
+        const int rhs_1 = stoi(p1.lexeme);
+        append_const(rhs_1);
+        newInstr->assign_inst.op1_loc = const_location[rhs_1];
+    } else { // token type == ID
+        const string rhs_1 = p1.lexeme;
+        newInstr->assign_inst.op1_loc = location_of[rhs_1];
+    }
+
     if (lexer.peek(1).token_type == SEMICOLON) {
         lexer.GetToken(); // everything consumed
         newInstr->assign_inst.op = OPERATOR_NONE;
-        // left = p1
 
-        if (p1.token_type == NUM) {
-            // left = p1 (num)
-            const int rhs = stoi(p1.lexeme);
-            append_const(rhs);
-            newInstr->assign_inst.op1_loc = const_location[rhs];
-        } else { // token type == ID
-            const string rhs = p1.lexeme;
-            newInstr->assign_inst.op1_loc = location_of[rhs];
-        }
         append_instruction(newInstr);
         return;
     }
     else {
-        debug("unsupported op");
-        error(); // unsupported op
+        Token op = lexer.GetToken();
+        assertTokenType(op , {PLUS, MINUS, MULT, DIV}, "Error with STATEMENT->ASSIGN->PRIMARY2");
+        Token p2 = lexer.GetToken();
+        assertTokenType(p2, {ID, NUM}, "Error with STATEMENT->ASSIGN->PRIMARY2");
+        assertTokenType(lexer.GetToken(), SEMICOLON, "Error with STATEMENT->ASSIGN->SEMICOLON");
+        
+
+        newInstr->assign_inst.op = arithOperatorType.at(op.token_type);
+
+        if (p2.token_type == NUM) {
+            // left = p1 op p2(num)
+            const int rhs_2 = stoi(p2.lexeme);
+            append_const(rhs_2);
+            newInstr->assign_inst.op2_loc = const_location[rhs_2];
+        } else { // token type == ID
+            const string rhs_2 = p2.lexeme;
+            newInstr->assign_inst.op2_loc = location_of[rhs_2];
+        }
+
+        append_instruction(newInstr);
         return;
     }
 }

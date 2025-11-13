@@ -11,3 +11,11 @@ test1:
 	make it 
 	./a.out < ./provided_tests/test_assignment_basic2.txt
 
+test2: 
+	make it 
+	./a.out < ./provided_tests/test_assignment_basic1.txt
+	./a.out < ./provided_tests/test_assignment_variables_no_init.txt
+	./a.out < ./provided_tests/test_assignment_variables1.txt
+	./a.out < ./provided_tests/test_assignment_variables2_operators.txt
+
+
