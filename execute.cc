@@ -24,6 +24,11 @@ int next_available = 0;
 std::vector<int> inputs;
 int next_input = 0;
 
+int instr_no = 0;
+void printNo() {
+    debug("At instruction number %d (1-indexed)", instr_no);
+}
+
 void execute_program(struct InstructionNode * program)
 {
     struct InstructionNode * pc = program;
@@ -31,6 +36,7 @@ void execute_program(struct InstructionNode * program)
 
     while(pc != NULL)
     {
+        instr_no++;
         switch(pc->type)
         {
             case NOOP:
@@ -119,6 +125,7 @@ void execute_program(struct InstructionNode * program)
                 break;
             default:
                 debug("Error: invalid value for pc->type (%d).\n", pc->type);
+                printNo();
                 exit(1);
                 break;
         }

@@ -136,11 +136,14 @@ void parse_body() {
     // stmt_list
     while (true) {
         // check if it is a statement
-        assertTokenType(lexer.peek(1), RBRACE, "Error in body->RBRACE");
+        if(lexer.peek(1).token_type == RBRACE) {
+            lexer.GetToken();
+            debug("END OF CURRENT BODY");
+            break;
+        }
 
         parse_statement();
     }
-
 }
 
 void parse_statement() {
@@ -162,24 +165,31 @@ void parse_statement() {
     */
    switch (lexer.peek(1).token_type) {
     case ID:
+        debug("Adding ASSIGN Instruction");
         parse_assign();
         break;
     case WHILE:
+        debug("Adding WHILE Instruction");
         // parse_while();
         break;
     case IF:
+        debug("Adding IF Instruction");
         // parse_if();
         break;
     case SWITCH:
+        debug("Adding SWITCH Instruction");
         // parse_switch();
         break;
     case FOR:
+        debug("Adding FOR Instruction");
         // parse_for();
         break;
     case OUTPUT:
+        debug("Adding OUTPUT Instruction");
         parse_output();
         break;
     case INPUT:
+        debug("Adding INPUT Instruction");
         parse_input();
         break;
     default:
@@ -265,19 +275,22 @@ void parse_inputs_section(void) {
             return;
         }
         assertTokenType(t, NUM, "EXPECTED NUMBERS IN INPUTS");
+        debug("Adding input %s", t.lexeme.c_str());
         inputs.push_back(stoi(t.lexeme));
     }
 }
 
 
 struct InstructionNode* parse_Generate_Intermediate_Representation() {
+    start->type = NOOP;
     debug("===========Entering Var Section:");
     parse_var_section();
     debug("===========Entering Body Section:");
     parse_body();
     debug("===========Entering Inputs Section:");
     parse_inputs_section();
-    return NULL;
+    debug("===========DONE, EXECUTING CODE==========");
+    return start;
 }
 
 
