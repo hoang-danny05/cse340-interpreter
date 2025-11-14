@@ -19,3 +19,9 @@ test2:
 	./a.out < ./provided_tests/test_assignment_variables2_operators.txt
 
 
+testif: 
+	make it
+	./a.out < provided_tests/test_control_i_if_f2.txt
+
+testif2:
+	./a.out < ./provided_tests/test_control_i_if_f_i_if_f1.txt

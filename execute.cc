@@ -94,6 +94,7 @@ void execute_program(struct InstructionNode * program)
                 op2 = mem[pc->cjmp_inst.op2_loc];
                 switch(pc->cjmp_inst.condition_op)
                 {
+                    // so it handles it for us, great!
                     case CONDITION_GREATER:
                         if(op1 > op2)
                             pc = pc->next;
@@ -131,7 +132,6 @@ void execute_program(struct InstructionNode * program)
         }
     }
 }
-
 
 int main()
 {

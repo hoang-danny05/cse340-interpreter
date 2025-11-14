@@ -97,6 +97,7 @@ void assertTokenType(Token t, vector<TokenType> types, const char* msg) {
             return;
     }
     debug(msg);
+    debug("Got %s", token_string[t.token_type]);
     error();
 }
 
@@ -134,7 +135,7 @@ void parse_for(void);
 void parse_output(void);
 void parse_input(void);
 
-void parse_body() {
+struct InstructionNode* parse_body() {
     assertTokenType(lexer.GetToken(), LBRACE, "Body expected starting LBRACE!");
 
     // stmt_list
@@ -148,6 +149,7 @@ void parse_body() {
 
         parse_statement();
     }
+    return recent_instr;
 }
 
 void parse_statement() {
@@ -180,7 +182,7 @@ void parse_statement() {
         break;
     case IF:
         debug("Adding IF Instruction");
-        // parse_if();
+        parse_if();
         break;
     case SWITCH:
         debug("Adding SWITCH Instruction");
@@ -203,6 +205,49 @@ void parse_statement() {
         error();
    }
 }
+
+void parse_condition(InstructionNode* instr) {
+    Token p1 = lexer.GetToken();
+    Token comp = lexer.GetToken();
+    Token p2 = lexer.GetToken();
+    assertTokenType(p1, {NUM, ID}, "Condition expected PRIMARY in spot 1");
+    assertTokenType(comp, {GREATER, LESS, NOTEQUAL}, "Condition expected Comparator at pos 3");
+    assertTokenType(p2, {NUM, ID}, "Condition expected PRIMARY in spot 2");
+
+    if (p1.token_type == NUM) {
+        append_const(stoi(p1.lexeme));
+        instr->cjmp_inst.op1_loc = const_location[stoi(p1.lexeme)];
+    }
+    else {
+        instr->cjmp_inst.op1_loc = location_of[p1.lexeme];
+    }
+
+    instr->cjmp_inst.condition_op = condOperatorType.at(comp.token_type);
+
+    if (p2.token_type == NUM) {
+        append_const(stoi(p2.lexeme));
+        instr->cjmp_inst.op2_loc = const_location[stoi(p2.lexeme)];
+    }
+    else {
+        instr->cjmp_inst.op2_loc = location_of[p2.lexeme];
+    }
+
+}
+
+void parse_if(void) {
+    InstructionNode *cjump = new InstructionNode;
+    InstructionNode *nop_target = new InstructionNode;
+    cjump->cjmp_inst.target = nop_target;
+    nop_target->type = NOOP;
+    assertTokenType(lexer.GetToken(), IF, "expected IF");
+    parse_condition(cjump);
+
+    parse_body();
+
+    append_instruction(nop_target);
+}
+
+
 
 void parse_input(void) {
     // input ID semicolon
