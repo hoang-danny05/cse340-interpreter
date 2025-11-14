@@ -283,7 +283,7 @@ void trace_execution(struct InstructionNode * program) {
     }
 }
 
-const bool TRACE_EXECUTION = true;
+const bool TRACE_EXECUTION = false;
 int main()
 {
     struct InstructionNode * program;

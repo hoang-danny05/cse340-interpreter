@@ -24,4 +24,7 @@ testif:
 	./a.out < provided_tests/test_control_i_if_f2.txt
 
 testif2:
+	make it
 	./a.out < ./provided_tests/test_control_i_if_f_i_if_f1.txt
+	echo "EXPECTED:"
+	cat ./provided_tests/test_control_i_if_f_i_if_f1.txt.expected
