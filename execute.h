@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 extern int mem[1000];
 extern int next_available;
@@ -76,6 +77,7 @@ struct InstructionNode
             int op1_loc;
             int op2_loc;
             struct InstructionNode *target;
+            int target_num;
         } cjmp_inst;
 
         struct

@@ -238,12 +238,15 @@ void parse_if(void) {
     InstructionNode *cjump = new InstructionNode;
     InstructionNode *nop_target = new InstructionNode;
     cjump->cjmp_inst.target = nop_target;
+    cjump->type = CJMP;
     nop_target->type = NOOP;
     assertTokenType(lexer.GetToken(), IF, "expected IF");
     parse_condition(cjump);
+    append_instruction(cjump);
 
     parse_body();
 
+    cjump->cjmp_inst.target_num = instr_num;
     append_instruction(nop_target);
 }
 
