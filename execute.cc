@@ -272,6 +272,7 @@ void trace_execution(struct InstructionNode * program) {
                     debug("Error: pc->jmp_inst->target is null.\n");
                     exit(1);
                 }
+                debug("JMP TO [%d]", pc->jmp_inst.target_num);
                 pc = pc->jmp_inst.target;
                 break;
             default:

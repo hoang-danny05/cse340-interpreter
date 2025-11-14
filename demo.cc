@@ -27,7 +27,7 @@ const char * token_string[] =  { "END_OF_FILE", \
 // to execute just run ./a.out < test, where test is any
 // test case
 LexicalAnalyzer lexer;   
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 
 using namespace std;
@@ -178,7 +178,7 @@ void parse_statement() {
         break;
     case WHILE:
         debug("Adding WHILE Instruction");
-        // parse_while();
+        parse_while();
         break;
     case IF:
         debug("Adding IF Instruction");
@@ -186,11 +186,11 @@ void parse_statement() {
         break;
     case SWITCH:
         debug("Adding SWITCH Instruction");
-        // parse_switch();
+        parse_switch();
         break;
     case FOR:
         debug("Adding FOR Instruction");
-        // parse_for();
+        parse_for();
         break;
     case OUTPUT:
         debug("Adding OUTPUT Instruction");
@@ -246,10 +246,39 @@ void parse_if(void) {
 
     parse_body();
 
+    cjump->cjmp_inst.target_num = instr_num; // RIGHT BEFORE append of the target
+    append_instruction(nop_target);
+}
+
+void parse_while(void) {
+    InstructionNode *cjump = new InstructionNode;
+    InstructionNode *jmp_looper = new InstructionNode;
+    InstructionNode *nop_target = new InstructionNode; // EXIT target
+    cjump->cjmp_inst.target = nop_target;
+    cjump->type = CJMP;
+    nop_target->type = NOOP;
+    jmp_looper->type = JMP;
+    jmp_looper->jmp_inst.target = cjump;
+    jmp_looper->jmp_inst.target_num = instr_num; // RIGHT BEFORE append of the target
+
+    assertTokenType(lexer.GetToken(), WHILE, "expected WHILE");
+    parse_condition(cjump);
+    append_instruction(cjump);
+
+    parse_body();
+    
+    append_instruction(jmp_looper);
     cjump->cjmp_inst.target_num = instr_num;
     append_instruction(nop_target);
 }
 
+void parse_for(void) {
+    error();
+}
+
+void parse_switch(void) {
+    error();
+}
 
 
 void parse_input(void) {

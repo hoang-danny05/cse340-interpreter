@@ -28,3 +28,9 @@ testif2:
 	./a.out < ./provided_tests/test_control_i_if_f_i_if_f1.txt
 	echo "EXPECTED:"
 	cat ./provided_tests/test_control_i_if_f_i_if_f1.txt.expected
+
+supertest:
+	make it
+	./a.out < $(target)
+	echo "EXPECTED:"
+	cat $(target).expected

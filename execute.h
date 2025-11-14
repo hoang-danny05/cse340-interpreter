@@ -83,6 +83,7 @@ struct InstructionNode
         struct
         {
             struct InstructionNode *target;
+            int target_num;
         } jmp_inst;
     };
 
