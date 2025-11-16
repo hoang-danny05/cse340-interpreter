@@ -128,6 +128,7 @@ void parse_var_section() {
 
 void parse_statement(void);
 void parse_assign(void);
+struct InstructionNode* parse_assign_without_append(void);
 void parse_while(void);
 void parse_if(void);
 void parse_switch(void);
@@ -273,7 +274,35 @@ void parse_while(void) {
 }
 
 void parse_for(void) {
-    error();
+    InstructionNode *cjump = new InstructionNode;
+    InstructionNode *jmp_looper = new InstructionNode;
+    InstructionNode *nop_target = new InstructionNode; // EXIT target
+    cjump->type = CJMP;
+    cjump->cjmp_inst.target = nop_target;
+    nop_target->type = NOOP;
+    jmp_looper->type = JMP;
+    jmp_looper->jmp_inst.target = cjump;
+    jmp_looper->jmp_inst.target_num = instr_num; // RIGHT BEFORE append of the target
+
+    assertTokenType(lexer.GetToken(), FOR, "EXPECTED FOR");
+    assertTokenType(lexer.GetToken(), LPAREN, "EXPECTED FOR -> (");
+    // first assignment statement assign1
+    struct InstructionNode* assign1 = parse_assign_without_append();
+    append_instruction(assign1);
+    parse_condition(cjump);
+    assertTokenType(lexer.GetToken(), SEMICOLON, "EXPECTED ; after FOR conditional");
+    append_instruction(cjump);
+    
+    struct InstructionNode* assign2 = parse_assign_without_append();
+
+    assertTokenType(lexer.GetToken(), RPAREN, "EXPECTED FOR -> (");
+
+    parse_body();
+
+    append_instruction(assign2);
+    append_instruction(jmp_looper);
+    cjump->cjmp_inst.target_num = instr_num;
+    append_instruction(nop_target);
 }
 
 void parse_switch(void) {
@@ -311,7 +340,11 @@ void parse_output(void) {
     append_instruction(newInstr);
 }
 
-void parse_assign() {
+void parse_assign(void) {
+    append_instruction(parse_assign_without_append());
+}
+
+struct InstructionNode* parse_assign_without_append(void) {
     struct InstructionNode *newInstr = new InstructionNode;
     newInstr->type = ASSIGN;
     
@@ -340,8 +373,7 @@ void parse_assign() {
         lexer.GetToken(); // everything consumed
         newInstr->assign_inst.op = OPERATOR_NONE;
 
-        append_instruction(newInstr);
-        return;
+        return newInstr;
     }
     else {
         Token op = lexer.GetToken();
@@ -363,10 +395,10 @@ void parse_assign() {
             newInstr->assign_inst.op2_loc = location_of[rhs_2];
         }
 
-        append_instruction(newInstr);
-        return;
+        return newInstr;
     }
 }
+
 
 void parse_inputs_section(void) {
     // NUM LIST (NUM NUM ... NUM EOF)
