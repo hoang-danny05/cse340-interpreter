@@ -305,7 +305,16 @@ void parse_for(void) {
     append_instruction(nop_target);
 }
 
+
+void parse_case(Token id) {
+
+
+}
+
 void parse_switch(void) {
+    assertTokenType(lexer.GetToken(), SWITCH, "EXPECTED SWITCH");
+    Token id = lexer.GetToken();
+    assertTokenType(id, ID, "EXPECTED SWITCH -> ID");
     error();
 }
 
