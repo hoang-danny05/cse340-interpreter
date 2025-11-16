@@ -8,7 +8,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 
 extern int mem[1000];
 extern int next_available;
@@ -29,8 +28,7 @@ enum ConditionalOperatorType
 {
     CONDITION_GREATER = 345,
     CONDITION_LESS,
-    CONDITION_NOTEQUAL,
-    CONDITION_EQUAL
+    CONDITION_NOTEQUAL
 };
 
 enum InstructionType
@@ -78,13 +76,11 @@ struct InstructionNode
             int op1_loc;
             int op2_loc;
             struct InstructionNode *target;
-            int target_num;
         } cjmp_inst;
 
         struct
         {
             struct InstructionNode *target;
-            int target_num;
         } jmp_inst;
     };
 

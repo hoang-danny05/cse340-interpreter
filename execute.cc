@@ -19,7 +19,8 @@ using namespace std;
 const map<ConditionalOperatorType, const char *> condition = {
     {CONDITION_GREATER, ">"},
     {CONDITION_LESS, "<"},
-    {CONDITION_NOTEQUAL, "!="}
+    {CONDITION_NOTEQUAL, "!="},
+    {CONDITION_EQUAL, "=="},
 };
 
 #define DEBUG 0     // 1 => Turn ON debugging, 0 => Turn OFF debugging
@@ -115,6 +116,12 @@ void execute_program(struct InstructionNode * program)
                         break;
                     case CONDITION_NOTEQUAL:
                         if(op1 != op2)
+                            pc = pc->next;
+                        else
+                            pc = pc->cjmp_inst.target;
+                        break;
+                    case CONDITION_EQUAL:
+                        if(op1 == op2)
                             pc = pc->next;
                         else
                             pc = pc->cjmp_inst.target;
@@ -258,6 +265,12 @@ void trace_execution(struct InstructionNode * program) {
                         break;
                     case CONDITION_NOTEQUAL:
                         if(op1 != op2)
+                            pc = pc->next;
+                        else
+                            pc = pc->cjmp_inst.target;
+                        break;
+                    case CONDITION_EQUAL:
+                        if(op1 == op2)
                             pc = pc->next;
                         else
                             pc = pc->cjmp_inst.target;

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include "execute.h"
 #include "lexer.h"
+#include "execute.h"
 
 const char * token_string[] =  { "END_OF_FILE", \
     "VAR", "FOR", "IF", "WHILE", "SWITCH", "CASE", "DEFAULT", "INPUT", "OUTPUT", "ARRAY",
@@ -306,16 +308,62 @@ void parse_for(void) {
 }
 
 
-void parse_case(Token id) {
+void parse_case(Token id, struct InstructionNode* nop_target) {
+    struct InstructionNode* break_jmp = new InstructionNode;
+    struct InstructionNode* case_nop_target = new InstructionNode;
+    struct InstructionNode* cjmp = new InstructionNode;
+    break_jmp->type = JMP;
+    break_jmp->jmp_inst.target_num = 999;
+    break_jmp->jmp_inst.target = nop_target;
+    case_nop_target->type = NOOP;
+    cjmp->type = CJMP;
+    cjmp->cjmp_inst.target = case_nop_target;
+    cjmp->cjmp_inst.condition_op = CONDITION_EQUAL;
+    cjmp->cjmp_inst.op1_loc = location_of[id.lexeme];
+    assertTokenType(lexer.GetToken(), CASE, "EXPECTED CASE!!");
+    Token num = lexer.GetToken();
+    append_const(stoi(num.lexeme));
+    cjmp->cjmp_inst.op2_loc = const_location[stoi(num.lexeme)];
+    assertTokenType(num, NUM, "Expected CASE -> NUM");
+    assertTokenType(lexer.GetToken(), COLON, "EXPECTED COLON");
+    append_instruction(cjmp);
 
+    parse_body();
 
+    append_instruction(break_jmp);
+    cjmp->cjmp_inst.target_num = instr_num; //RIGHT BEFORE append target
+    append_instruction(case_nop_target);
+}
+
+void parse_default(void) {
+    assertTokenType(lexer.GetToken(), DEFAULT, "DEFAULT");
+    assertTokenType(lexer.GetToken(), COLON, "DEFAULT -> COLON");
+    parse_body();
 }
 
 void parse_switch(void) {
+    struct InstructionNode * nop_target = new InstructionNode;
+    nop_target->type = NOOP;
     assertTokenType(lexer.GetToken(), SWITCH, "EXPECTED SWITCH");
     Token id = lexer.GetToken();
     assertTokenType(id, ID, "EXPECTED SWITCH -> ID");
-    error();
+    assertTokenType(lexer.GetToken(), LBRACE, "SWITCH -> LBRACE");
+
+    while (true) {
+        debug("\tParsing CASE");
+        if (lexer.peek(1).token_type == CASE) {
+            parse_case(id, nop_target);
+        }
+        else {
+            break;
+        }
+    }
+    if (lexer.peek(1).token_type == DEFAULT) {
+        parse_default();
+    }
+
+    assertTokenType(lexer.GetToken(), RBRACE, "SWITCH -> RBRACE");
+    append_instruction(nop_target);
 }
 
 

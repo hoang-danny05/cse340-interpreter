@@ -1,0 +1,29 @@
+
+a, b;
+{
+	input b;
+	a = 999;
+
+	SWITCH b {
+		CASE 1: {
+			a = 1;
+			output a;
+		}
+		CASE 5: {
+			a = 5;
+			output a;
+		}
+		CASE 10: {
+			a = 10;
+			output a;
+		}
+		CASE 12: {
+			a = 12;
+			output a;
+		}
+		DEFAULT: {
+			output a;
+		}
+	}
+}
+10 200 1 2
